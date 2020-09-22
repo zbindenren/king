@@ -1,0 +1,259 @@
+// Package king is a library to configure the command line parser
+// https://github.com/alecthomas/kong
+package king
+
+import (
+	"context"
+	"fmt"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/alecthomas/kong"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+const redactChar = `*`
+
+// Config is used to create DefaultOptions.
+type Config struct {
+	Context     context.Context
+	Name        string
+	Description string
+	BuildInfo   *BuildInfo
+	ConfigPaths []string
+}
+
+func (c Config) pathString() string {
+	return strings.Join(c.ConfigPaths, ",")
+}
+
+// DefaultOptions creates a set of opinionated options.
+func DefaultOptions(c Config) []kong.Option {
+	if c.ConfigPaths == nil {
+		c.ConfigPaths = configsForApp(c.Name)
+	}
+
+	vars := kong.Vars{
+		configPathsKey: c.pathString(),
+	}
+
+	if c.BuildInfo != nil {
+		vars[versionKey] = c.BuildInfo.Version(c.Name)
+
+		for k, v := range c.BuildInfo.asMap("king_") {
+			vars[k] = v
+		}
+	}
+
+	opts := []kong.Option{
+		kong.Name(c.Name),
+		kong.Description(c.Description),
+		kong.HelpFormatter(newHelpFormatter(c.Name)),
+		kong.ConfigureHelp(kong.HelpOptions{
+			Compact: true,
+		}),
+		kong.UsageOnError(),
+		kong.Resolvers(EnvResolver()),
+		kong.Configuration(YAML, c.ConfigPaths...),
+		vars,
+	}
+
+	if c.Context != nil {
+		opts = append(opts, bindContext(c.Context))
+	}
+
+	return opts
+}
+
+// Map is a map with string as key and interface{} as value.
+type Map map[string]interface{}
+
+// FlagMap returns the flags and corresponding values from *kong.Context.
+func FlagMap(ctx *kong.Context) Map {
+	m := Map{}
+	for _, f := range ctx.Flags() {
+		m[f.Name] = ctx.FlagValue(f)
+	}
+
+	b := newBuildInfo("king_", ctx.Model.Vars())
+	if b != nil {
+		for k, v := range b.asMap("") {
+			m[k] = v
+		}
+	}
+
+	return m
+}
+
+// Redact redacts values get with '*', for keys that match a keyRegexp
+// regular expression. This can be useful for redacting passwords, keys etc...
+func (m Map) Redact(keyRegexp ...*regexp.Regexp) Map {
+	r := redactor(keyRegexp)
+	nm := Map{}
+
+	for k, v := range m {
+		nm[k] = r(k, v)
+	}
+
+	return nm
+}
+
+// Add adds key and values.
+func (m Map) Add(keyVals ...string) Map {
+	nm := Map{}
+
+	for k, v := range m {
+		nm[k] = v
+	}
+
+	max := len(keyVals)
+	if max%2 != 0 {
+		max--
+	}
+
+	for i := 0; i < max; i += 2 {
+		nm[keyVals[i]] = keyVals[i+1]
+	}
+
+	return nm
+}
+
+// Rm removes keys from Map.
+func (m Map) Rm(keys ...string) Map {
+	nm := Map{}
+
+	for k, v := range m {
+		if contains(keys, k) {
+			continue
+		}
+
+		nm[k] = v
+	}
+
+	return nm
+}
+
+// List returns the flag and values as list (sorted by keys).
+func (m Map) List() []interface{} {
+	l := make([]interface{}, 0, 2*len(m))
+
+	for _, k := range m.keys() {
+		l = append(l, k, m[k])
+	}
+
+	return l
+}
+
+// Register registers prometheus flag collectors that display configured flags as
+// metrics. The genereated metrics are of the form:
+//
+//     kong_flag{program="progname", name="flagname", value="flagvalue"} 1
+func (m Map) Register(program string, registerer prometheus.Registerer) Map {
+	for _, c := range m.collectors(program) {
+		registerer.MustRegister(c)
+	}
+
+	return m
+}
+
+func (m Map) keys() []string {
+	keys := make([]string, 0, len(m))
+
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	return keys
+}
+
+func (m Map) collectors(program string) []prometheus.Collector {
+	collectors := []prometheus.Collector{}
+
+	for name, value := range m {
+		if isRedacted(value) {
+			continue
+		}
+
+		collectors = append(collectors, newFlagCollector(program, name, fmt.Sprintf("%v", value)))
+	}
+
+	return collectors
+}
+
+func bindContext(ctx context.Context) kong.Option {
+	return kong.BindTo(ctx, (*context.Context)(nil))
+}
+
+func redactor(targets []*regexp.Regexp) func(string, interface{}) interface{} {
+	return func(key string, value interface{}) interface{} {
+		s, ok := value.(string)
+		if !ok {
+			return value
+		}
+
+		for _, t := range targets {
+			if t.MatchString(strings.ToLower(key)) {
+				return strings.Repeat(string(redactChar), len(s))
+			}
+		}
+
+		return value
+	}
+}
+
+func contains(list []string, item string) bool {
+	for _, itm := range list {
+		if itm == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+func newHelpFormatter(appName string) func(*kong.Value) string {
+	return func(value *kong.Value) string {
+		suffix := "($" + value.Tag.Env + ")"
+
+		if value.Tag.Env == "" {
+			envName := toEnvVarName(appName, value)
+			suffix = "($" + envName + ")"
+		}
+
+		switch {
+		case strings.HasSuffix(value.Help, "."):
+			return value.Help[:len(value.Help)-1] + " " + suffix + "."
+		case value.Help == "":
+			return suffix
+		default:
+			return value.Help + " " + suffix
+		}
+	}
+}
+
+func newFlagCollector(program string, flags ...string) prometheus.Collector {
+	return prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "kong_flag",
+			Help: "A metric with a constant '1' value labeled by program, flag name and value",
+			ConstLabels: prometheus.Labels{
+				"program": program,
+				"name":    flags[0],
+				"value":   flags[1],
+			},
+		},
+		func() float64 { return 1 },
+	)
+}
+
+func isRedacted(value interface{}) bool {
+	v, ok := value.(string)
+	if !ok {
+		return false
+	}
+
+	return v == strings.Repeat(string(redactChar), len(v))
+}
