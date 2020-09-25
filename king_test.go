@@ -136,7 +136,7 @@ func TestVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := fmt.Sprintf(`test, version 1.0.0 (revision: 12345678)
-  build date:       2020-09-22T11:11:10&#43;02:00
+  build date:       2020-09-22T11:11:10+02:00
   go version:       %s
 `, runtime.Version())
 

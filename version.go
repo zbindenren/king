@@ -3,9 +3,9 @@ package king
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"runtime"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/alecthomas/kong"
