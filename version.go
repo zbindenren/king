@@ -2,6 +2,7 @@ package king
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"runtime"
 	"strings"
@@ -71,7 +72,11 @@ type Option func(*BuildInfo) error
 // WithRevision sets the git commit revision.
 func WithRevision(r string) Option {
 	return func(b *BuildInfo) error {
-		b.revision = r
+		if len(r) < 8 {
+			return errors.New("build revision must be at least 8 chars long")
+		}
+
+		b.revision = r[:8]
 
 		return nil
 	}
