@@ -12,6 +12,13 @@ import (
 //
 //     kong_flag{program="progname", name="flagname", value="flagvalue"} 1
 func (m Map) Register(program string, registerer prometheus.Registerer) Map {
+	bi, ok := m[buildInfoKey]
+	if ok {
+		b := bi.(*BuildInfo)
+		b.register(program, registerer)
+		delete(m, buildInfoKey)
+	}
+
 	for _, c := range m.collectors(program) {
 		registerer.MustRegister(c)
 	}
@@ -23,7 +30,7 @@ func (m Map) collectors(program string) []prometheus.Collector {
 	collectors := []prometheus.Collector{}
 
 	for name, value := range m {
-		if isRedacted(value) {
+		if isRedacted(value) || strings.HasPrefix(name, "buildinfo-") {
 			continue
 		}
 
@@ -31,6 +38,25 @@ func (m Map) collectors(program string) []prometheus.Collector {
 	}
 
 	return collectors
+}
+
+func (b *BuildInfo) register(program string, reg prometheus.Registerer) {
+	buildInfoGauge := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "kong_build_info",
+			Help: "A metric with a constant '1' value labeled by program, version, go, date and revision",
+			ConstLabels: prometheus.Labels{
+				"program":  program,
+				"version":  b.version,
+				"go":       b.goVersion,
+				"date":     b.date.String(),
+				"revision": b.revision,
+			},
+		},
+		func() float64 { return 1 },
+	)
+
+	reg.MustRegister(buildInfoGauge)
 }
 
 func newFlagCollector(program string, flags ...string) prometheus.Collector {

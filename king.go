@@ -76,6 +76,7 @@ func FlagMap(ctx *kong.Context) Map {
 
 	b := newBuildInfo("king_", ctx.Model.Vars())
 	if b != nil {
+		m[buildInfoKey] = b
 		for k, v := range b.asMap("") {
 			m[k] = v
 		}
@@ -147,6 +148,10 @@ func (m Map) keys() []string {
 	keys := make([]string, 0, len(m))
 
 	for k := range m {
+		if k == buildInfoKey {
+			continue
+		}
+
 		keys = append(keys, k)
 	}
 

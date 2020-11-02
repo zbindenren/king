@@ -13,6 +13,7 @@ import (
 
 const (
 	versionKey      = "king_version"
+	buildInfoKey    = "king_build_info"
 	versionInfoTmpl = `
 {{.Program}}, version {{.Version}} (revision: {{.Revision}})
   build date:       {{.Date}}
