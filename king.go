@@ -92,7 +92,6 @@ func FlagMap(ctx *kong.Context, redactFlags ...*regexp.Regexp) Map {
 }
 
 func (m Map) redact(keyRegexp ...*regexp.Regexp) Map {
-
 	r := redactor(keyRegexp)
 	nm := Map{}
 
