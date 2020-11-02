@@ -18,9 +18,9 @@ const (
 type ShowConfig bool
 
 // BeforeApply is the actual show-config command.
-func (s ShowConfig) BeforeApply(k *kong.Kong, vars kong.Vars) error {
-	fmt.Fprintln(k.Stderr, "Configuration files:")
-	w := tabwriter.NewWriter(k.Stderr, 0, 0, 1, ' ', 0)
+func (s ShowConfig) BeforeApply(app *kong.Kong, vars kong.Vars) error {
+	fmt.Fprintln(app.Stderr, "Configuration files:")
+	w := tabwriter.NewWriter(app.Stderr, 0, 0, 1, ' ', 0)
 
 	for _, file := range Configs(vars) {
 		filePath := kong.ExpandPath(file)
@@ -34,6 +34,8 @@ func (s ShowConfig) BeforeApply(k *kong.Kong, vars kong.Vars) error {
 	}
 
 	w.Flush()
+
+	app.Exit(0)
 
 	return nil
 }

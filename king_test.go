@@ -197,7 +197,7 @@ func TestFlagMap(t *testing.T) {
 	ctx, err := parser.Parse([]string{"--help", "--override-config=will_be_redacted"})
 	require.NoError(t, err)
 
-	l := king.FlagMap(ctx).Rm("override-auto-env", "help").Add("version", "1.0", "commit", "123456789", "not_added").Redact(regexp.MustCompile("override-config")).List()
+	l := king.FlagMap(ctx, regexp.MustCompile("override-config")).Rm("override-auto-env", "help").Add("version", "1.0", "commit", "123456789", "not_added").List()
 	expected := []interface{}{
 		"commit",
 		"123456789",
@@ -217,7 +217,7 @@ func TestFlagMap(t *testing.T) {
 	assert.Equal(t, expected, l)
 
 	reg := prometheus.NewRegistry()
-	king.FlagMap(ctx).Add("pw", "123").Add("bool-flag", "true").Redact(regexp.MustCompile("pw")).Rm("help").Register("program", reg)
+	king.FlagMap(ctx, regexp.MustCompile("override-config")).Add("bool-flag", "true").Rm("help").Register("program", reg)
 
 	a, err := reg.Gather()
 	require.NoError(t, err)
@@ -236,11 +236,7 @@ func TestFlagMap(t *testing.T) {
 		`name:"name" value:"bool-flag"`,
 		`name:"program" value:"program"`,
 		`name:"value" value:"true"`,
-		`name:"name" value:"override-config"`,
-		`name:"program" value:"program"`,
-		`name:"value" value:"will_be_redacted"`,
 	}
-
 	sort.Strings(expectedLabels)
 	sort.Strings(labels)
 

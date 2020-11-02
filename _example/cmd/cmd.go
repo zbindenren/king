@@ -28,13 +28,10 @@ type serverCmd struct {
 }
 
 func (s serverCmd) Run(app *kong.Context, g *Globals, l *zap.SugaredLogger, reg *prometheus.Registry) error {
-	l.Infow("starting server", king.FlagMap(app).Rm(
+	l.Infow("starting server", king.FlagMap(app, regexp.MustCompile("token"), regexp.MustCompile("pw")).Rm(
 		"help", "version",
 	).Register(
 		app.Model.Name, reg,
-	).Redact(
-		regexp.MustCompile("token"),
-		regexp.MustCompile("pw"),
 	).List()...)
 
 	r := chi.NewRouter()
@@ -59,8 +56,10 @@ func (s serverCmd) Run(app *kong.Context, g *Globals, l *zap.SugaredLogger, reg 
 
 // Globals are the gloabal flags.
 type Globals struct {
-	Debug    bool          `help:"enable debug output"`
-	Profiler profilerFlags `embed:"" prefix:"profiler-"`
+	Debug    bool             `help:"enable debug output"`
+	Profiler profilerFlags    `embed:"" prefix:"profiler-"`
+	Version  king.VersionFlag `help:"Show version information"`
+	Show     king.ShowConfig  `help:"Show config file used"`
 }
 
 type profilerFlags struct {

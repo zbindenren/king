@@ -68,11 +68,17 @@ func DefaultOptions(c Config) []kong.Option {
 type Map map[string]interface{}
 
 // FlagMap returns the flags and corresponding values from *kong.Context.
-func FlagMap(ctx *kong.Context) Map {
+//
+// To prevent logging sensitive flag values it is possible to provide
+// a list of regular expressions. Flag values of flag names that match are
+// redacted by '*'.
+func FlagMap(ctx *kong.Context, redactFlags ...*regexp.Regexp) Map {
 	m := Map{}
 	for _, f := range ctx.Flags() {
 		m[f.Name] = ctx.FlagValue(f)
 	}
+
+	m = m.redact(redactFlags...)
 
 	b := newBuildInfo("king_", ctx.Model.Vars())
 	if b != nil {
@@ -85,9 +91,8 @@ func FlagMap(ctx *kong.Context) Map {
 	return m
 }
 
-// Redact redacts values get with '*', for keys that match a keyRegexp
-// regular expression. This can be useful for redacting passwords, keys etc...
-func (m Map) Redact(keyRegexp ...*regexp.Regexp) Map {
+func (m Map) redact(keyRegexp ...*regexp.Regexp) Map {
+
 	r := redactor(keyRegexp)
 	nm := Map{}
 

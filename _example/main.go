@@ -17,7 +17,7 @@ var (
 	commit  = "123456789"
 )
 
-const appName = "daeira"
+const appName = "example"
 
 func main() {
 	cli := cmd.CLI{}
