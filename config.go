@@ -24,13 +24,24 @@ func (s ShowConfig) BeforeApply(app *kong.Kong, vars kong.Vars) error {
 
 	for _, file := range Configs(vars) {
 		filePath := kong.ExpandPath(file)
-		found := "parsed"
 
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			found = "not found"
+		f, err := os.Open(filePath) //nolint: gosec
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Fprintf(w, "  %s\tnot found\n", filePath)
+				continue
+			}
+
+			if os.IsPermission(err) {
+				fmt.Fprintf(w, "  %s\tpermission denied\n", filePath)
+				continue
+			}
+
+			return err
 		}
 
-		fmt.Fprintf(w, "  %s\t%v\n", filePath, found)
+		f.Close()
+		fmt.Fprintf(w, "  %s\tparsed\n", filePath)
 	}
 
 	w.Flush()
