@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
@@ -22,18 +23,18 @@ func (s ShowConfig) BeforeApply(app *kong.Kong, vars kong.Vars) error {
 	fmt.Fprintln(app.Stderr, "Configuration files:")
 	w := tabwriter.NewWriter(app.Stderr, 0, 0, 1, ' ', 0)
 
-	for _, file := range Configs(vars) {
-		filePath := kong.ExpandPath(file)
+	for _, f := range Configs(vars) {
+		file := kong.ExpandPath(f)
 
-		f, err := os.Open(filePath) //nolint: gosec
+		f, err := os.Open(filepath.Clean(file))
 		if err != nil {
 			if os.IsNotExist(err) {
-				fmt.Fprintf(w, "  %s\tnot found\n", filePath)
+				fmt.Fprintf(w, "  %s\tnot found\n", file)
 				continue
 			}
 
 			if os.IsPermission(err) {
-				fmt.Fprintf(w, "  %s\tpermission denied\n", filePath)
+				fmt.Fprintf(w, "  %s\tpermission denied\n", file)
 				continue
 			}
 
@@ -41,7 +42,7 @@ func (s ShowConfig) BeforeApply(app *kong.Kong, vars kong.Vars) error {
 		}
 
 		f.Close()
-		fmt.Fprintf(w, "  %s\tparsed\n", filePath)
+		fmt.Fprintf(w, "  %s\tparsed\n", file)
 	}
 
 	w.Flush()

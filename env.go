@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ignoredFlagsNames map[string]bool = map[string]bool{
+	ignoredFlagsNames = map[string]bool{
 		"help":     true,
 		"env-help": true,
 	}
