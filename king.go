@@ -15,11 +15,12 @@ const redactChar = `*`
 
 // Config is used to create DefaultOptions.
 type Config struct {
-	Context     context.Context
-	Name        string
-	Description string
-	BuildInfo   *BuildInfo
-	ConfigPaths []string
+	Context      context.Context
+	Name         string
+	Description  string
+	BuildInfo    *BuildInfo
+	ConfigPaths  []string
+	FileResolver FileResolver
 }
 
 func (c Config) pathString() string {
@@ -28,6 +29,10 @@ func (c Config) pathString() string {
 
 // DefaultOptions creates a set of opinionated options.
 func DefaultOptions(c Config) []kong.Option {
+	if c.FileResolver == "" {
+		c.FileResolver = YAML
+	}
+
 	if c.ConfigPaths == nil {
 		c.ConfigPaths = configsForApp(c.Name)
 	}
@@ -53,12 +58,15 @@ func DefaultOptions(c Config) []kong.Option {
 		}),
 		kong.UsageOnError(),
 		kong.Resolvers(EnvResolver()),
-		kong.Configuration(YAML, c.ConfigPaths...),
 		vars,
 	}
 
 	if c.Context != nil {
 		opts = append(opts, bindContext(c.Context))
+	}
+
+	if len(c.ConfigPaths) > 0 {
+		opts = append(opts, kong.Configuration(NewFileResolver(c.FileResolver), c.ConfigPaths...))
 	}
 
 	return opts

@@ -107,6 +107,37 @@ override-config: "%s"
 	assert.Equal(t, expected, c)
 }
 
+func TestTOMLResolver(t *testing.T) {
+	cfgValue := "fromConfig"
+	path, cleanUpFile := writeFile(t, []byte(fmt.Sprintf(`from-config="%s"
+override-config="%s"
+`, cfgValue, cfgValue),
+	))
+	defer cleanUpFile()
+
+	expected := cli{
+		FromConfig:     cfgValue,
+		OverrideConfig: cfgValue,
+	}
+
+	cli := cli{}
+	buf := &strings.Builder{}
+	opts := king.DefaultOptions(
+		king.Config{
+			Name:         "test",
+			Description:  "A application to test.",
+			ConfigPaths:  []string{path},
+			FileResolver: king.TOML,
+		},
+	)
+	opts = append(opts, kong.Writers(buf, buf))
+	parser, err := kong.New(&cli, opts...)
+	require.NoError(t, err)
+	_, err = parser.Parse([]string{})
+	require.NoError(t, err)
+	assert.Equal(t, expected, cli)
+}
+
 func TestVersion(t *testing.T) {
 	buf := &strings.Builder{}
 	b, err := king.NewBuildInfo("1.0.0",
