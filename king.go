@@ -42,7 +42,7 @@ func DefaultOptions(c Config) []kong.Option {
 	}
 
 	if c.BuildInfo != nil {
-		vars[versionKey] = c.BuildInfo.Version(c.Name)
+		vars[versionKey] = c.BuildInfo.Version(c.Name).String()
 
 		for k, v := range c.BuildInfo.asMap("king_") {
 			vars[k] = v

@@ -119,26 +119,31 @@ func WithLocation(loc string) Option {
 	}
 }
 
-// Version returns the version information as string.
-func (b *BuildInfo) Version(program string) string {
-	t := template.Must(template.New("version").Parse(versionInfoTmpl))
-
-	data := struct {
-		Version   string
-		Revision  string
-		Date      string
-		GoVersion string
-		Program   string
-	}{
+// Version returns the version information.
+func (b *BuildInfo) Version(program string) Version {
+	return Version{
 		Version:   b.version,
 		Revision:  b.revision,
 		Date:      b.date.In(b.location).Format(time.RFC3339),
 		GoVersion: b.goVersion,
 		Program:   program,
 	}
+}
+
+// Version represents the version of a go program.
+type Version struct {
+	Version   string `json:"version" yaml:"version"`
+	Revision  string `json:"revision" yaml:"revision"`
+	Date      string `json:"date" yaml:"date"`
+	GoVersion string `json:"go_version" yaml:"go_version"`
+	Program   string `json:"program" yaml:"program"`
+}
+
+func (v Version) String() string {
+	t := template.Must(template.New("version").Parse(versionInfoTmpl))
 
 	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "version", data); err != nil {
+	if err := t.ExecuteTemplate(&buf, "version", v); err != nil {
 		panic(err)
 	}
 
