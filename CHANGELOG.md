@@ -1,3 +1,12 @@
+## 0.2.0 (2021-07-13)
+
+
+### New Features
+
+* **common**: add toml config support (e0f13a9717566f73f2504f62540f818fe110f9d0)
+
+
+
 ## 0.1.1 (2021-07-05)
 
 
