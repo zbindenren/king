@@ -1,3 +1,13 @@
+## 0.3.0 (2021-08-11)
+
+
+### New Features
+
+* **common**: add Config.Variables to be added to kong.Vars (d5a8c1735b43793fae461e3f8d02ea09af040ad7)
+* **common**: add the possibility to get version struct (9bee9cd01a950f0eed35421e2b18020d5c218847)
+
+
+
 ## 0.2.0 (2021-07-13)
 
 
