@@ -20,6 +20,7 @@ type Config struct {
 	Description  string
 	BuildInfo    *BuildInfo
 	ConfigPaths  []string
+	Variables    map[string]string
 	FileResolver FileResolver
 }
 
@@ -39,6 +40,10 @@ func DefaultOptions(c Config) []kong.Option {
 
 	vars := kong.Vars{
 		configPathsKey: c.pathString(),
+	}
+
+	for k, v := range c.Variables {
+		vars[k] = v
 	}
 
 	if c.BuildInfo != nil {
