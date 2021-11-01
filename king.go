@@ -62,7 +62,6 @@ func DefaultOptions(c Config) []kong.Option {
 			Compact: true,
 		}),
 		kong.UsageOnError(),
-		kong.Resolvers(EnvResolver()),
 		vars,
 	}
 
@@ -71,7 +70,7 @@ func DefaultOptions(c Config) []kong.Option {
 	}
 
 	if len(c.ConfigPaths) > 0 {
-		opts = append(opts, kong.Configuration(NewFileResolver(c.FileResolver), c.ConfigPaths...))
+		opts = append(opts, kong.Configuration(NewFileResolver(c.FileResolver), c.ConfigPaths...), kong.Resolvers(EnvResolver()))
 	}
 
 	return opts
