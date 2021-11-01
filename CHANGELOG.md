@@ -1,3 +1,15 @@
+## 0.3.1 (2021-11-01)
+
+
+### Bug Fixes
+
+* **common**: resolver order (e872e8121e824d8c1c7cb73f74d0861767254525)
+  > The weighting of flag values changed from `flags > config > env-vars` to
+  > `flags > env-vars > config`. This means values from flags overwrite
+  > values from env-vars which overwrite values from config.
+
+
+
 ## 0.3.0 (2021-08-11)
 
 
