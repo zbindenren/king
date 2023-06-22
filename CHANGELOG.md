@@ -1,3 +1,17 @@
+## 0.3.2 (2023-06-22)
+
+
+### Dependencies
+
+* **deps**: bump kong to 0.8.1 (f3204c690c0fc8fc87d1da4e348282c0668cc77f)
+
+
+### Dependencies
+
+* **deps**: bump kong to 0.8.1 (f3204c690c0fc8fc87d1da4e348282c0668cc77f)
+
+
+
 ## 0.3.1 (2021-11-01)
 
 
