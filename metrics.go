@@ -10,7 +10,7 @@ import (
 // Register registers prometheus flag collectors that display configured flags as
 // metrics. The genereated metrics are of the form:
 //
-//     kong_flag{program="progname", name="flagname", value="flagvalue"} 1
+//	kong_flag{program="progname", name="flagname", value="flagvalue"} 1
 func (m Map) Register(program string, registerer prometheus.Registerer) Map {
 	bi, ok := m[buildInfoKey]
 	if ok {

@@ -57,7 +57,7 @@ func DefaultOptions(c Config) []kong.Option {
 	opts := []kong.Option{
 		kong.Name(c.Name),
 		kong.Description(c.Description),
-		kong.HelpFormatter(newHelpFormatter(c.Name)),
+		kong.ValueFormatter(newHelpFormatter(c.Name)),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact: true,
 		}),
@@ -209,11 +209,13 @@ func contains(list []string, item string) bool {
 
 func newHelpFormatter(appName string) func(*kong.Value) string {
 	return func(value *kong.Value) string {
-		suffix := "($" + value.Tag.Env + ")"
+		var suffix string
 
-		if value.Tag.Env == "" {
+		if len(value.Tag.Envs) == 0 {
 			envName := toEnvVarName(appName, value)
 			suffix = "($" + envName + ")"
+		} else {
+			suffix = "($" + value.Tag.Envs[0] + ")"
 		}
 
 		switch {

@@ -7,23 +7,21 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-var (
-	ignoredFlagsNames = map[string]bool{
-		"help":     true,
-		"env-help": true,
-	}
-)
+var ignoredFlagsNames = map[string]bool{
+	"help":     true,
+	"env-help": true,
+}
 
 // EnvResolver returns a Resolver that retrieves values from environment variables.
 //
 // Hyphens in flag names are replaced with underscores.
 // Flag names are prefixed with app name and converted to uppercase.
 //
-//  Usage:
-//  ctx := kong.Parse(&cli,
-//      kong.Resolvers(pfkong.EnvResolver()),
-//      )
-//  }
+//	Usage:
+//	ctx := kong.Parse(&cli,
+//	    kong.Resolvers(pfkong.EnvResolver()),
+//	    )
+//	}
 func EnvResolver() kong.Resolver {
 	var f kong.ResolverFunc = func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
 		if ok := ignoredFlagsNames[flag.Name]; ok {
