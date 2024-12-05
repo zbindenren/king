@@ -192,7 +192,7 @@ func TestHelp(t *testing.T) {
 	_, err = parser.Parse([]string{"--help"})
 	require.NoError(t, err)
 
-	expected := `Usage: test
+	expected := `Usage: test [flags]
 
 A application to test.
 
@@ -264,9 +264,9 @@ func TestFlagMap(t *testing.T) {
 	}
 
 	expectedLabels := []string{
-		`name:"name" value:"bool-flag"`,
-		`name:"program" value:"program"`,
-		`name:"value" value:"true"`,
+		`name:"name"  value:"bool-flag"`,
+		`name:"program"  value:"program"`,
+		`name:"value"  value:"true"`,
 	}
 	sort.Strings(expectedLabels)
 	sort.Strings(labels)
