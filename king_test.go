@@ -2,7 +2,6 @@ package king_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime"
@@ -32,7 +31,7 @@ func tempEnv(env envMap) func() {
 }
 
 func writeFile(t *testing.T, data []byte) (filePath string, cleanup func()) {
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Error(t, err)
 	}
@@ -72,11 +71,11 @@ func TestYAMLAndAutoEnvResolvers(t *testing.T) {
 
 	defer cleanup()
 
-	path, cleanUpFile := writeFile(t, []byte(fmt.Sprintf(`---
+	path, cleanUpFile := writeFile(t, fmt.Appendf(nil, `---
 from-config: "%s"
 override-config: "%s"
 `, cfgValue, cfgValue),
-	))
+	)
 	defer cleanUpFile()
 
 	expected := cli{
@@ -109,10 +108,10 @@ override-config: "%s"
 
 func TestTOMLResolver(t *testing.T) {
 	cfgValue := "fromConfig"
-	path, cleanUpFile := writeFile(t, []byte(fmt.Sprintf(`from-config="%s"
+	path, cleanUpFile := writeFile(t, fmt.Appendf(nil, `from-config="%s"
 override-config="%s"
 `, cfgValue, cfgValue),
-	))
+	)
 	defer cleanUpFile()
 
 	expected := cli{
