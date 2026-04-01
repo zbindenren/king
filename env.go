@@ -42,5 +42,5 @@ func toEnvVarName(prefix string, value *kong.Value) string {
 		prefix += "_"
 	}
 
-	return strings.ToUpper(prefix + strings.ReplaceAll(value.Name, "-", "_"))
+	return strings.ToUpper(strings.ReplaceAll(prefix+value.Name, "-", "_"))
 }
