@@ -4,7 +4,9 @@ package king
 
 import (
 	"context"
+	"maps"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -42,16 +44,12 @@ func DefaultOptions(c Config) []kong.Option {
 		configPathsKey: c.pathString(),
 	}
 
-	for k, v := range c.Variables {
-		vars[k] = v
-	}
+	maps.Copy(vars, c.Variables)
 
 	if c.BuildInfo != nil {
 		vars[versionKey] = c.BuildInfo.Version(c.Name).String()
 
-		for k, v := range c.BuildInfo.asMap("king_") {
-			vars[k] = v
-		}
+		maps.Copy(vars, c.BuildInfo.asMap("king_"))
 	}
 
 	opts := []kong.Option{
@@ -77,7 +75,7 @@ func DefaultOptions(c Config) []kong.Option {
 }
 
 // Map is a map with string as key and interface{} as value.
-type Map map[string]interface{}
+type Map map[string]any
 
 // FlagMap returns the flags and corresponding values from *kong.Context.
 //
@@ -118,9 +116,7 @@ func (m Map) redact(keyRegexp ...*regexp.Regexp) Map {
 func (m Map) Add(keyVals ...string) Map {
 	nm := Map{}
 
-	for k, v := range m {
-		nm[k] = v
-	}
+	maps.Copy(nm, m)
 
 	max := len(keyVals)
 	if max%2 != 0 {
@@ -150,8 +146,8 @@ func (m Map) Rm(keys ...string) Map {
 }
 
 // List returns the flag and values as list (sorted by keys).
-func (m Map) List() []interface{} {
-	l := make([]interface{}, 0, 2*len(m))
+func (m Map) List() []any {
+	l := make([]any, 0, 2*len(m))
 
 	for _, k := range m.keys() {
 		l = append(l, k, m[k])
@@ -180,8 +176,8 @@ func bindContext(ctx context.Context) kong.Option {
 	return kong.BindTo(ctx, (*context.Context)(nil))
 }
 
-func redactor(targets []*regexp.Regexp) func(string, interface{}) interface{} {
-	return func(key string, value interface{}) interface{} {
+func redactor(targets []*regexp.Regexp) func(string, any) any {
+	return func(key string, value any) any {
 		s, ok := value.(string)
 		if !ok {
 			return value
@@ -198,13 +194,7 @@ func redactor(targets []*regexp.Regexp) func(string, interface{}) interface{} {
 }
 
 func contains(list []string, item string) bool {
-	for _, itm := range list {
-		if itm == item {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(list, item)
 }
 
 func newHelpFormatter(appName string) func(*kong.Value) string {

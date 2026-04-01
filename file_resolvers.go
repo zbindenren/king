@@ -29,14 +29,14 @@ func NewFileResolver(f FileResolver) kong.ConfigurationLoader {
 }
 
 func yamlResolver(r io.Reader) (kong.Resolver, error) {
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	err := yaml.NewDecoder(r).Decode(&values)
 	if err != nil {
 		return nil, err
 	}
 
-	var f kong.ResolverFunc = func(ctx *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
+	var f kong.ResolverFunc = func(ctx *kong.Context, parent *kong.Path, flag *kong.Flag) (any, error) {
 		raw, ok := values[flag.Name]
 		if !ok {
 			return nil, nil
@@ -49,7 +49,7 @@ func yamlResolver(r io.Reader) (kong.Resolver, error) {
 }
 
 func tomlResolver(r io.Reader) (kong.Resolver, error) {
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -60,7 +60,7 @@ func tomlResolver(r io.Reader) (kong.Resolver, error) {
 		return nil, err
 	}
 
-	var f kong.ResolverFunc = func(ctx *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
+	var f kong.ResolverFunc = func(ctx *kong.Context, parent *kong.Path, flag *kong.Flag) (any, error) {
 		raw, ok := values[flag.Name]
 		if !ok {
 			return nil, nil

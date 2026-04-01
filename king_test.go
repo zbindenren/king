@@ -228,7 +228,7 @@ func TestFlagMap(t *testing.T) {
 	require.NoError(t, err)
 
 	l := king.FlagMap(ctx, regexp.MustCompile("override-config")).Rm("override-auto-env", "help").Add("version", "1.0", "commit", "123456789", "not_added").List()
-	expected := []interface{}{
+	expected := []any{
 		"commit",
 		"123456789",
 		"from-auto-env",

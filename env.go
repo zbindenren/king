@@ -23,7 +23,7 @@ var ignoredFlagsNames = map[string]bool{
 //	    )
 //	}
 func EnvResolver() kong.Resolver {
-	var f kong.ResolverFunc = func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
+	var f kong.ResolverFunc = func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (any, error) {
 		if ok := ignoredFlagsNames[flag.Name]; ok {
 			return nil, nil
 		}

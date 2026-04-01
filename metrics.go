@@ -74,7 +74,7 @@ func newFlagCollector(program string, flags ...string) prometheus.Collector {
 	)
 }
 
-func isRedacted(value interface{}) bool {
+func isRedacted(value any) bool {
 	v, ok := value.(string)
 	if !ok {
 		return false

@@ -55,7 +55,7 @@ func (s ShowConfig) BeforeApply(app *kong.Kong, vars kong.Vars) error {
 // Configs returns all configured absolute paths form kong.Vars.
 func Configs(vars kong.Vars) []string {
 	paths := []string{}
-	for _, f := range strings.Split(vars[configPathsKey], ",") {
+	for f := range strings.SplitSeq(vars[configPathsKey], ",") {
 		paths = append(paths, kong.ExpandPath(f))
 	}
 
