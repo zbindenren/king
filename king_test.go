@@ -257,15 +257,15 @@ func TestFlagMap(t *testing.T) {
 	for _, m := range a {
 		for _, b := range m.GetMetric() {
 			for _, label := range b.GetLabel() {
-				labels = append(labels, strings.TrimSpace(label.String()))
+				labels = append(labels, label.GetName()+"="+label.GetValue())
 			}
 		}
 	}
 
 	expectedLabels := []string{
-		`name:"name"  value:"bool-flag"`,
-		`name:"program"  value:"program"`,
-		`name:"value"  value:"true"`,
+		`name=bool-flag`,
+		`program=program`,
+		`value=true`,
 	}
 	sort.Strings(expectedLabels)
 	sort.Strings(labels)
